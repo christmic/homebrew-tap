@@ -21,16 +21,23 @@ class Token9 < Formula
 
   depends_on macos: :ventura
 
+  def user_home
+    # Homebrew post_install may run with $HOME pointing to a temp dir;
+    # resolve the real user home from the password database.
+    require "etc"
+    Etc.getpwuid.dir
+  rescue
+    ENV.fetch("HOME", Dir.home)
+  end
+
   def install
-    # Find the binary and app bundle wherever they are in the tarball
-    # (avoids being fragile about archive nesting depth).
-    tok = Pathname.glob(buildpath/"**/bin/token9").first
-    app = Pathname.glob(buildpath/"**/Token9.app").first
+    # Tarball layout: token9-macos-arm64/{bin/token9, Token9.app/}
+    pkg = buildpath/"token9-macos-arm64"
 
-    bin.install tok
+    bin.install pkg/"bin/token9"
 
-    if OS.mac? && app
-      cp_r app, prefix/"Token9.app"
+    if OS.mac? && (pkg/"Token9.app").directory?
+      cp_r pkg/"Token9.app", prefix/"Token9.app"
     end
   end
 
@@ -45,22 +52,28 @@ class Token9 < Formula
   def post_install
     (var/"log").mkpath
 
+    # Copy Token9.app to ~/Applications so the user can find it in Launchpad.
     if OS.mac?
-      apps_dir = Pathname.new(Dir.home)/"Applications"
+      apps_dir = Pathname.new(user_home)/"Applications"
       apps_dir.mkpath
       app_dst = apps_dir/"Token9.app"
       rm_rf app_dst
-      cp_r "#{prefix}/Token9.app", app_dst
-      ohai "Token9.app installed at #{app_dst}"
+      cp_r prefix/"Token9.app", app_dst
+      ohai "Token9.app copied to #{app_dst}"
     end
 
-    ohai "Starting token9 as a launchd service..."
+    # Register + start the launchd service.
+    # HOMEBREW_NO_REQUIRE_TAP_TRUST avoids trust errors in the subprocess.
+    # rescue nil ensures the rest of post_install (app launch) runs even if
+    # services fails (e.g. for already-running scenarios).
+    ohai "Registering token9 as a launchd service..."
     system({"HOMEBREW_NO_REQUIRE_TAP_TRUST" => "1"},
            "brew", "services", "start", "token9") rescue nil
 
+    # Pop the app open so the user sees the dashboard immediately.
     if OS.mac?
       ohai "Launching Token9.app..."
-      system "open", "#{ENV["HOME"]}/Applications/Token9.app"
+      system "open", "#{user_home}/Applications/Token9.app" rescue nil
     end
   end
 
