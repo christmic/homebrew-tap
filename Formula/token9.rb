@@ -11,14 +11,12 @@ class Token9 < Formula
       url "https://github.com/christmic/token9/releases/download/v#{version}/token9-v#{version}-macos-arm64.tar.gz"
       sha256 "REPLACE_ARM64_SHA256"
     else
-      url "https://github.com/christmic/token9/releases/download/v#{version}/token9-v#{version}-macos-x86_64.tar.gz"
-      sha256 "REPLACE_X86_64_SHA256"
+      odie "token9 only ships macOS arm64 builds"
     end
   end
 
   on_linux do
-    url "https://github.com/christmic/token9/releases/download/v#{version}/token9-v#{version}-linux-x86_64.tar.gz"
-    sha256 "REPLACE_LINUX_SHA256"
+    odie "token9 currently ships macOS arm64 only"
   end
 
   depends_on macos: :ventura
