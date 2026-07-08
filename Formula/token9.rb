@@ -38,17 +38,6 @@ class Token9 < Formula
     error_log_path var/"log/token9.err.log"
   end
 
-  def post_install
-    (var/"log").mkpath
-
-    app = prefix/"Token9.app"
-    if app.directory?
-      dest = Pathname.new(ENV["HOME"])/"Applications"/"Token9.app"
-      rm_rf dest
-      cp_r app, dest
-    end
-  end
-
   test do
     assert_match "token9", shell_output("#{bin}/token9 --help")
   end
