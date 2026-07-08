@@ -41,23 +41,30 @@ class Token9 < Formula
   def post_install
     (var/"log").mkpath
 
-    # Copy plist to ~/Library/LaunchAgents and load it immediately.
     plist = prefix/"homebrew.mxcl.token9.plist"
+    app   = prefix/"Token9.app"
+    home  = Pathname.new(ENV["HOME"])
+
+    # Drop plist into LaunchAgents — auto-loads on next login.
     if plist.exist?
-      dest = Pathname.new(ENV["HOME"])/"Library"/"LaunchAgents"/"homebrew.mxcl.token9.plist"
+      dest = home/"Library"/"LaunchAgents"/"homebrew.mxcl.token9.plist"
       dest.dirname.mkpath
       cp plist, dest
-      system "launchctl", "load", dest.to_s rescue nil
     end
 
-    # Copy Token9.app to ~/Applications and open it.
-    app = prefix/"Token9.app"
+    # Drop app into ~/Applications.
     if app.directory?
-      dest = Pathname.new(ENV["HOME"])/"Applications"/"Token9.app"
+      dest = home/"Applications"/"Token9.app"
       rm_rf dest
       cp_r app, dest
-      system "open", dest.to_s rescue nil
     end
+  end
+
+  def caveats
+    <<~EOS
+      Start now (or restart your Mac and it auto-starts):
+        brew services start token9 && open ~/Applications/Token9.app
+    EOS
   end
 
   test do
