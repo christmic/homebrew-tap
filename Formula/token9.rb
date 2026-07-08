@@ -38,6 +38,19 @@ class Token9 < Formula
     error_log_path var/"log/token9.err.log"
   end
 
+  def caveats
+    <<~EOS
+      Start the gateway:
+        brew services start token9
+
+      Open the dashboard:
+        open #{opt_prefix}/Token9.app
+
+      (Optional) Pin to /Applications:
+        ln -s #{opt_prefix}/Token9.app /Applications/Token9.app
+    EOS
+  end
+
   test do
     assert_match "token9", shell_output("#{bin}/token9 --help")
   end
