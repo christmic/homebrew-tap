@@ -4,7 +4,7 @@
 class Token9 < Formula
   desc "Transparent LLM gateway — local API router & token meter"
   homepage "https://github.com/christmic/token9"
-  version "0.1.3"
+  version "0.1.4"
 
   on_macos do
     if Hardware::CPU.arm?
