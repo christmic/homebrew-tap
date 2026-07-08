@@ -29,9 +29,13 @@ class Token9 < Formula
   end
 
   def install
-    pkg = buildpath/"token9-macos-arm64"
-    bin.install pkg/"bin/token9"
-    cp_r pkg/"Token9.app", prefix/"Token9.app" if (pkg/"Token9.app").directory?
+    # Use recursive glob — tarball nesting may vary across releases.
+    tok = Pathname.glob(buildpath/"**/bin/token9").first
+    app = Pathname.glob(buildpath/"**/Token9.app").first
+    odie "token9 binary not found in archive" unless tok
+
+    bin.install tok
+    cp_r app, prefix/"Token9.app" if app
   end
 
   service do
