@@ -22,13 +22,12 @@ class Token9 < Formula
   depends_on macos: :ventura
 
   def install
-    # Tarball layout: token9-<os>-<arch>/{bin/token9, Token9.app/}
-    pkg = buildpath.glob("token9-*-*").first
+    # Tarball layout: token9-macos-arm64/{bin/token9, Token9.app/}
+    pkg = buildpath/"token9-macos-arm64"
     bin.install pkg/"bin/token9"
 
     if OS.mac?
-      app_src = pkg/"Token9.app"
-      (prefix/"Token9.app").install app_src.children
+      cp_r pkg/"Token9.app", prefix/"Token9.app"
     end
   end
 
