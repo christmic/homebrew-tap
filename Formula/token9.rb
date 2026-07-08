@@ -55,7 +55,8 @@ class Token9 < Formula
     end
 
     ohai "Starting token9 as a launchd service..."
-    system "brew", "services", "start", "token9" rescue nil
+    system({"HOMEBREW_NO_REQUIRE_TAP_TRUST" => "1"},
+           "brew", "services", "start", "token9") rescue nil
 
     if OS.mac?
       ohai "Launching Token9.app..."
