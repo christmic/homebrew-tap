@@ -56,6 +56,11 @@ class Token9 < Formula
 
     ohai "Starting token9 as a launchd service..."
     system "brew", "services", "start", "token9"
+
+    if OS.mac?
+      ohai "Launching Token9.app..."
+      system "open", "#{ENV["HOME"]}/Applications/Token9.app"
+    end
   end
 
   test do
