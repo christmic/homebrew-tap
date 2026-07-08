@@ -21,15 +21,7 @@ class Token9 < Formula
 
   depends_on macos: :ventura
 
-  def user_home
-    require "etc"
-    Etc.getpwuid.dir
-  rescue
-    ENV.fetch("HOME", Dir.home)
-  end
-
   def install
-    # Use recursive glob — tarball nesting may vary across releases.
     tok = Pathname.glob(buildpath/"**/bin/token9").first
     app = Pathname.glob(buildpath/"**/Token9.app").first
     odie "token9 binary not found in archive" unless tok
@@ -48,33 +40,23 @@ class Token9 < Formula
 
   def post_install
     (var/"log").mkpath
-    home = Pathname.new(user_home)
 
-    # 1. Install + load launchd plist directly (no brew services — avoids tap trust in subprocess)
-    plist_src = prefix/"homebrew.mxcl.token9.plist"
-    plist_dst = home/".local/share/launchd"/"ai.oraculo.token9.plist"
-    if plist_src.exist?
-      plist_dst.dirname.mkpath
-      cp plist_src, plist_dst
-      # bootstrap into the user's GUI domain so it survives logout
-      uid = Etc.getpwuid.uid
-      system "launchctl", "bootout", "gui/#{uid}/ai.oraculo.token9", exception: false
-      system "launchctl", "bootstrap", "gui/#{uid}", plist_dst.to_s
-      ohai "token9 service registered (launchd) — auto-starts on login"
+    # Copy plist to ~/Library/LaunchAgents and load it immediately.
+    plist = prefix/"homebrew.mxcl.token9.plist"
+    if plist.exist?
+      dest = Pathname.new(ENV["HOME"])/"Library"/"LaunchAgents"/"homebrew.mxcl.token9.plist"
+      dest.dirname.mkpath
+      cp plist, dest
+      system "launchctl", "load", dest.to_s rescue nil
     end
 
-    # 2. Copy Token9.app to ~/Applications
-    app_src = prefix/"Token9.app"
-    if app_src.directory?
-      app_dst = home/"Applications"/"Token9.app"
-      rm_rf app_dst
-      cp_r app_src, app_dst
-      ohai "Token9.app copied to #{app_dst}"
-    end
-
-    # 3. Open the dashboard immediately
-    if app_src.directory?
-      system "open", (home/"Applications"/"Token9.app").to_s, exception: false
+    # Copy Token9.app to ~/Applications and open it.
+    app = prefix/"Token9.app"
+    if app.directory?
+      dest = Pathname.new(ENV["HOME"])/"Applications"/"Token9.app"
+      rm_rf dest
+      cp_r app, dest
+      system "open", dest.to_s rescue nil
     end
   end
 
