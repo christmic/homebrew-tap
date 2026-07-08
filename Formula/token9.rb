@@ -22,8 +22,6 @@ class Token9 < Formula
   depends_on macos: :ventura
 
   def user_home
-    # Homebrew post_install may run with $HOME pointing to a temp dir;
-    # resolve the real user home from the password database.
     require "etc"
     Etc.getpwuid.dir
   rescue
@@ -31,14 +29,9 @@ class Token9 < Formula
   end
 
   def install
-    # Tarball layout: token9-macos-arm64/{bin/token9, Token9.app/}
     pkg = buildpath/"token9-macos-arm64"
-
     bin.install pkg/"bin/token9"
-
-    if OS.mac? && (pkg/"Token9.app").directory?
-      cp_r pkg/"Token9.app", prefix/"Token9.app"
-    end
+    cp_r pkg/"Token9.app", prefix/"Token9.app" if (pkg/"Token9.app").directory?
   end
 
   service do
@@ -51,29 +44,33 @@ class Token9 < Formula
 
   def post_install
     (var/"log").mkpath
+    home = Pathname.new(user_home)
 
-    # Copy Token9.app to ~/Applications so the user can find it in Launchpad.
-    if OS.mac?
-      apps_dir = Pathname.new(user_home)/"Applications"
-      apps_dir.mkpath
-      app_dst = apps_dir/"Token9.app"
+    # 1. Install + load launchd plist directly (no brew services — avoids tap trust in subprocess)
+    plist_src = prefix/"homebrew.mxcl.token9.plist"
+    plist_dst = home/".local/share/launchd"/"ai.oraculo.token9.plist"
+    if plist_src.exist?
+      plist_dst.dirname.mkpath
+      cp plist_src, plist_dst
+      # bootstrap into the user's GUI domain so it survives logout
+      uid = Etc.getpwuid.uid
+      system "launchctl", "bootout", "gui/#{uid}/ai.oraculo.token9", exception: false
+      system "launchctl", "bootstrap", "gui/#{uid}", plist_dst.to_s
+      ohai "token9 service registered (launchd) — auto-starts on login"
+    end
+
+    # 2. Copy Token9.app to ~/Applications
+    app_src = prefix/"Token9.app"
+    if app_src.directory?
+      app_dst = home/"Applications"/"Token9.app"
       rm_rf app_dst
-      cp_r prefix/"Token9.app", app_dst
+      cp_r app_src, app_dst
       ohai "Token9.app copied to #{app_dst}"
     end
 
-    # Register + start the launchd service.
-    # HOMEBREW_NO_REQUIRE_TAP_TRUST avoids trust errors in the subprocess.
-    # rescue nil ensures the rest of post_install (app launch) runs even if
-    # services fails (e.g. for already-running scenarios).
-    ohai "Registering token9 as a launchd service..."
-    system({"HOMEBREW_NO_REQUIRE_TAP_TRUST" => "1"},
-           "brew", "services", "start", "token9") rescue nil
-
-    # Pop the app open so the user sees the dashboard immediately.
-    if OS.mac?
-      ohai "Launching Token9.app..."
-      system "open", "#{user_home}/Applications/Token9.app" rescue nil
+    # 3. Open the dashboard immediately
+    if app_src.directory?
+      system "open", (home/"Applications"/"Token9.app").to_s, exception: false
     end
   end
 
