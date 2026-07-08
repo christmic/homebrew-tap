@@ -1,8 +1,26 @@
 # homebrew-tap
 
-Personal Homebrew Tap for Telvorn (Ghostty fork).
+Personal Homebrew Tap for christmic projects.
 
-## Install
+## Available Formulae
+
+### token9
+
+Transparent LLM gateway — local API router & token meter (Rust).
+
+```bash
+brew tap christmic/tap
+brew install --head token9
+```
+
+```bash
+token9 --help
+token9 serve
+```
+
+### telvorn
+
+Fork of Ghostty — terminal emulator that uses platform-native UI and GPU acceleration.
 
 ```bash
 brew tap christmic/tap
@@ -12,31 +30,34 @@ brew install --cask telvorn
 ## Update
 
 ```bash
-brew upgrade --cask telvorn
+brew upgrade --head token9       # rebuild token9 from latest master
+brew upgrade --cask telvorn       # download latest telvorn release
 ```
 
 ## Uninstall
 
 ```bash
+brew uninstall token9
 brew uninstall --cask telvorn
 brew untap christmic/tap
 ```
 
 ## Development
 
-首次推送：
-```bash
-git remote add origin git@github.com:christmic/homebrew-tap.git
-git push -u origin master
-```
+### Adding a new formula
 
-发布新版本：
-1. 构建 telvorn 并打包成 `.dmg`
-2. 计算 sha256：`shasum -a 256 telvorn-macos-arm64.dmg`
-3. 更新 `Casks/telvorn.rb` 中的 `version` 和 `sha256`
-4. 提交并推送
+1. Create `Formula/<name>.rb` for CLI tools, `Casks/<name>.rb` for GUI apps
+2. Commit and push to master
+3. Install with `brew install christmic/tap/<name>`
+
+### Releasing a new version (stable)
+
+1. Tag the upstream repo: `git tag vX.Y.Z && git push --tags`
+2. Create a GitHub release with tarball/asset
+3. Update the formula with version and sha256
 
 ## Notes
 
 - Only supports macOS ARM64 (Apple Silicon)
 - Requires macOS Ventura or later
+- Token9 also requires Rust toolchain (`xcode-select --install` or `brew install rust`)
