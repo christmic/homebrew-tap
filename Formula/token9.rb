@@ -22,12 +22,15 @@ class Token9 < Formula
   depends_on macos: :ventura
 
   def install
-    # Tarball layout: token9-macos-arm64/{bin/token9, Token9.app/}
-    pkg = buildpath/"token9-macos-arm64"
-    bin.install pkg/"bin/token9"
+    # Find the binary and app bundle wherever they are in the tarball
+    # (avoids being fragile about archive nesting depth).
+    tok = Pathname.glob(buildpath/"**/bin/token9").first
+    app = Pathname.glob(buildpath/"**/Token9.app").first
 
-    if OS.mac?
-      cp_r pkg/"Token9.app", prefix/"Token9.app"
+    bin.install tok
+
+    if OS.mac? && app
+      cp_r app, prefix/"Token9.app"
     end
   end
 
