@@ -9,7 +9,7 @@ class Token9 < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/christmic/token9/releases/download/v#{version}/token9-v#{version}-macos-arm64.tar.gz"
-      sha256 "REPLACE_ARM64_SHA256"
+      sha256 "c34abfc962ee225c51dbb78ab7a43e35e564b42a3694983fe4e58d0f3396bdfa"
     else
       odie "token9 only ships macOS arm64 builds"
     end
