@@ -55,7 +55,7 @@ class Token9 < Formula
     end
 
     ohai "Starting token9 as a launchd service..."
-    system "brew", "services", "start", "token9"
+    system "brew", "services", "start", "token9" rescue nil
 
     if OS.mac?
       ohai "Launching Token9.app..."
